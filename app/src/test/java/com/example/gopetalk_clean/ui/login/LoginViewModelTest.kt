@@ -85,4 +85,9 @@ class LoginViewModelTest {
         val state = viewModel.loginState.value as LoginUiState.Error
         assertThat(state.message).isEqualTo("Usuario o contrasena incorrectos")
     }
+
+    @Test
+    fun `intentional failing test for CI gate demo`() = runTest {
+        assertThat(true).isFalse()
+    }
 }
