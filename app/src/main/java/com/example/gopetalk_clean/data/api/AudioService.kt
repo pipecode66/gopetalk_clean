@@ -29,7 +29,7 @@ class AudioService @Inject constructor() {
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
     fun startRecording(onData: (ByteArray) -> Unit) {
         if (bufferSize <= 0) {
-            throw IllegalStateException("Buffer inválido: $bufferSize")
+            throw IllegalStateException("Buffer invalido: $bufferSize")
         }
 
         recorder = AudioRecord(

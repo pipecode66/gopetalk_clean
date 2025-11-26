@@ -48,8 +48,16 @@ class SessionManager(context: Context) {
         sharedPreferences.edit { putString(KEY_USER_EMAIL, email) }
     }
 
+    fun saveCurrentChannel(channel: String) {
+        sharedPreferences.edit { putString(KEY_CURRENT_CHANNEL, channel) }
+    }
+
+    fun getCurrentChannel(): String? {
+        return sharedPreferences.getString(KEY_CURRENT_CHANNEL, null)
+    }
+
     fun clearCurrentChannel() {
-        sharedPreferences.edit { remove(com.example.gopetalk_clean.data.storage.SessionManager.Companion.KEY_CURRENT_CHANNEL) }
+        sharedPreferences.edit { remove(KEY_CURRENT_CHANNEL) }
     }
 
     fun clearSession() {
@@ -57,6 +65,5 @@ class SessionManager(context: Context) {
     }
 
 }
-
 
 

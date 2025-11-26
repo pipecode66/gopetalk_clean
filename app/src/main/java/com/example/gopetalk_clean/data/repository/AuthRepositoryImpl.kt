@@ -22,7 +22,7 @@ class AuthRepositoryImpl @Inject constructor(
         return authService.register(request)
     }
 
-    override suspend fun logout(response: LogoutResponse): Response<LogoutResponse> {
+    override suspend fun logout(): Response<LogoutResponse> {
         return authService.logout()
     }
 }

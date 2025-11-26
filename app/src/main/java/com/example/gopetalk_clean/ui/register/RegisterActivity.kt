@@ -5,12 +5,15 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.example.gopetalk_clean.databinding.ActivityRegisterBinding
 import com.example.gopetalk_clean.event.RegisterUiEvent
 import com.example.gopetalk_clean.ui.login.LoginActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class RegisterActivity : AppCompatActivity() {
@@ -22,15 +25,17 @@ class RegisterActivity : AppCompatActivity() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        lifecycleScope.launchWhenStarted {
-            registerViewModel.uiEvent.collectLatest { event ->
-                when (event) {
-                    is RegisterUiEvent.ShowMessage -> {
-                        Toast.makeText(this@RegisterActivity, event.message, Toast.LENGTH_SHORT).show()
-                    }
-                    is RegisterUiEvent.NavigateToLogin -> {
-                        startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
-                        finish()
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                registerViewModel.uiEvent.collectLatest { event ->
+                    when (event) {
+                        is RegisterUiEvent.ShowMessage -> {
+                            Toast.makeText(this@RegisterActivity, event.message, Toast.LENGTH_SHORT).show()
+                        }
+                        is RegisterUiEvent.NavigateToLogin -> {
+                            startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+                            finish()
+                        }
                     }
                 }
             }

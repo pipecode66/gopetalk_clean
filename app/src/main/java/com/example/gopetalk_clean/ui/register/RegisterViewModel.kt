@@ -16,12 +16,12 @@ import kotlinx.coroutines.launch
 import retrofit2.Response
 import javax.inject.Inject
 
-
-
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
 ) : ViewModel() {
+
+    private val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")
 
     private val _registerState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
     val registerState: StateFlow<RegisterUiState> = _registerState
@@ -37,16 +37,17 @@ class RegisterViewModel @Inject constructor(
         confirmPassword: String
     ) {
         if (email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
-            viewModelScope.launch {
-                _uiEvent.emit(RegisterUiEvent.ShowMessage("Todos los campos son obligatorios"))
-            }
+            emitMessage("Todos los campos son obligatorios")
+            return
+        }
+
+        if (!emailRegex.matches(email)) {
+            emitMessage("Correo invalido")
             return
         }
 
         if (password != confirmPassword) {
-            viewModelScope.launch {
-                _uiEvent.emit(RegisterUiEvent.ShowMessage("Las contraseñas no coinciden"))
-            }
+            emitMessage("Las contrasenas no coinciden")
             return
         }
 
@@ -61,12 +62,11 @@ class RegisterViewModel @Inject constructor(
                 val body = response.body()!!
                 _registerState.value = RegisterUiState.Success(body)
 
-                // Emitir evento de éxito + navegación
                 _uiEvent.emit(RegisterUiEvent.ShowMessage("Registro exitoso"))
                 _uiEvent.emit(RegisterUiEvent.NavigateToLogin)
             } else {
                 val message = when (response.code()) {
-                    400 -> "Datos inválidos o incompletos"
+                    400 -> "Datos invalidos o incompletos"
                     409 -> "El usuario ya existe"
                     else -> "Error desconocido (${response.code()})"
                 }
@@ -75,5 +75,10 @@ class RegisterViewModel @Inject constructor(
             }
         }
     }
-}
 
+    private fun emitMessage(message: String) {
+        viewModelScope.launch {
+            _uiEvent.emit(RegisterUiEvent.ShowMessage(message))
+        }
+    }
+}

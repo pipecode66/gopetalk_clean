@@ -17,21 +17,22 @@ import androidx.lifecycle.lifecycleScope
 import com.example.gopetalk_clean.data.audio.WebSocketManager
 import com.example.gopetalk_clean.data.storage.SessionManager
 import com.example.gopetalk_clean.databinding.FragmentButtonTalkBinding
-import com.example.gopetalk_clean.ui.channels.ListChannelsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class ButtonTalkFragment : Fragment() {
-    private val listchannelsviewmodel: ListChannelsViewModel by viewModels()
     private val viewModel: ButtonTalkViewModel by viewModels()
     private lateinit var binding: FragmentButtonTalkBinding
-    private val REQUEST_RECORD_AUDIO = 101
+
     @Inject
     lateinit var webSocketManager: WebSocketManager
+
     @Inject
     lateinit var sessionManager: SessionManager
+
+    private val channelName: String by lazy { arguments?.getString("channel") ?: "general" }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -96,17 +97,21 @@ class ButtonTalkFragment : Fragment() {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 viewModel.startTalking()
             } else {
-                Toast.makeText(requireContext(), "Se necesita permiso de micrófono", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Se necesita permiso de microfono", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun setupIncomingAudioListener() {
-        val channel = listchannelsviewmodel.currentChannel.value ?: "general"
         val userId = sessionManager.getUserId()
-        val token = sessionManager.getAccessToken() ?: ""
+        val token = sessionManager.getAccessToken()
 
-        webSocketManager.connect(channel, String(), token)
+        if (userId < 0 || token.isNullOrBlank()) {
+            Toast.makeText(requireContext(), "No hay sesion activa para conectarse al canal", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        webSocketManager.connect(channelName, userId.toString(), token)
 
         viewLifecycleOwner.lifecycleScope.launch {
             webSocketManager.incomingAudio.collect { data ->
@@ -118,5 +123,9 @@ class ButtonTalkFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         webSocketManager.disconnect()
+    }
+
+    companion object {
+        private const val REQUEST_RECORD_AUDIO = 101
     }
 }

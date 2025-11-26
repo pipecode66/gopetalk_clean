@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.gopetalk_clean.domain.state.InfoChannelUiState
 import com.example.gopetalk_clean.domain.usecase.ConnectToChannelUseCase
 import com.example.gopetalk_clean.domain.usecase.DisconnectFromChannelUseCase
-import com.example.gopetalk_clean.domain.usecase.GetChannelsUseCase
 import com.example.gopetalk_clean.domain.usecase.GetChannelUsersUseCase
+import com.example.gopetalk_clean.domain.usecase.GetChannelsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,6 +28,8 @@ class InfoChannelsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(InfoChannelUiState())
     val uiState: StateFlow<InfoChannelUiState> = _uiState
 
+    private var pollingJob: Job? = null
+
     fun fetchChannels() {
         viewModelScope.launch {
             try {
@@ -40,13 +42,11 @@ class InfoChannelsViewModel @Inject constructor(
     }
 
     fun connectToChannel(channelName: String, userId: String, token: String) {
-        startUserPolling(channelName)
         viewModelScope.launch {
             try {
                 connectToChannelUseCase(channelName, userId, token)
 
                 val users = getChannelUsersUseCase(channelName)
-
                 _uiState.update { current ->
                     current.copy(
                         channelName = channelName,
@@ -54,20 +54,20 @@ class InfoChannelsViewModel @Inject constructor(
                         userCountText = "${users.size} usuarios"
                     )
                 }
+                startUserPolling(channelName)
             } catch (e: Exception) {
                 _uiState.update { current ->
                     current.copy(
                         channelName = channelName,
-                        isConnected = true,
+                        isConnected = false,
                         userCountText = "0 usuarios"
                     )
                 }
             }
         }
     }
-    private var pollingJob: Job? = null
 
-    fun startUserPolling(channelName: String) {
+    private fun startUserPolling(channelName: String) {
         pollingJob?.cancel()
         pollingJob = viewModelScope.launch {
             while (isActive) {
@@ -77,7 +77,7 @@ class InfoChannelsViewModel @Inject constructor(
                         userCountText = "${users.size} usuarios"
                     )
                 }
-                delay(3000) // cada 3 segundos
+                delay(3000)
             }
         }
     }
@@ -87,10 +87,9 @@ class InfoChannelsViewModel @Inject constructor(
         pollingJob = null
     }
 
-
     fun disconnectFromChannel() {
         viewModelScope.launch {
-            // Desconexión vía WebSocket/Repositorio
+            stopUserPolling()
             disconnectFromChannelUseCase()
 
             _uiState.update { current ->

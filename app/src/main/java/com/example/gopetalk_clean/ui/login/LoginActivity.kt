@@ -8,7 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.gopetalk_clean.databinding.ActivityLoginBinding
 import com.example.gopetalk_clean.domain.state.LoginUiState
+import com.example.gopetalk_clean.event.LoginUiEvent
 import com.example.gopetalk_clean.ui.main.MainActivity
+import com.example.gopetalk_clean.ui.register.RegisterActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -27,31 +29,50 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
+            loginViewModel.login(email, password)
+        }
 
-            if (email.isNotEmpty() && password.isNotEmpty()) {
-                loginViewModel.login(email, password)
-            } else {
-                Toast.makeText(this, "Complete todos los campos", Toast.LENGTH_SHORT).show()
-            }
+        binding.btnRegister.setOnClickListener {
+            loginViewModel.goToRegister()
         }
-        binding.btnLogin.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-        }
+
+        observeUiEvents()
+        observeState()
+    }
+
+    private fun observeState() {
         lifecycleScope.launch {
             loginViewModel.loginState.collectLatest { state ->
                 when (state) {
-                    is LoginUiState.Loading -> {
-                        Toast.makeText(this@LoginActivity, "Cargando...", Toast.LENGTH_SHORT).show()
-                    }
-                    is LoginUiState.Success -> {
-                        Toast.makeText(this@LoginActivity, "Bienvenido ${state.data.first_name}", Toast.LENGTH_SHORT).show()
-                        goToMain()
-                    }
+                    is LoginUiState.Loading -> binding.btnLogin.isEnabled = false
+                    is LoginUiState.Success -> binding.btnLogin.isEnabled = true
                     is LoginUiState.Error -> {
+                        binding.btnLogin.isEnabled = true
                         Toast.makeText(this@LoginActivity, state.message, Toast.LENGTH_SHORT).show()
                     }
-                    else -> Unit
+                    else -> binding.btnLogin.isEnabled = true
+                }
+            }
+        }
+    }
+
+    private fun observeUiEvents() {
+        lifecycleScope.launch {
+            loginViewModel.uiEvent.collectLatest { event ->
+                when (event) {
+                    is LoginUiEvent.ShowMessage -> {
+                        Toast.makeText(this@LoginActivity, event.message, Toast.LENGTH_SHORT).show()
+                    }
+                    is LoginUiEvent.NavigateToMain -> goToMain()
+                    is LoginUiEvent.NavigateToRegister -> goToRegister()
+                    is LoginUiEvent.ShowEmailError -> {
+                        binding.tilEmail.error = event.error
+                        binding.tilEmail.isErrorEnabled = event.error != null
+                    }
+                    is LoginUiEvent.ShowPasswordError -> {
+                        binding.tilPassword.error = event.error
+                        binding.tilPassword.isErrorEnabled = event.error != null
+                    }
                 }
             }
         }
@@ -60,6 +81,11 @@ class LoginActivity : AppCompatActivity() {
     private fun goToMain() {
         val intent = Intent(this, MainActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+    private fun goToRegister() {
+        val intent = Intent(this, RegisterActivity::class.java)
         startActivity(intent)
     }
 }
