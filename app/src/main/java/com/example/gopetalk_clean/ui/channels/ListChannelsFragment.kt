@@ -20,10 +20,9 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class ListChannelsFragment : Fragment() {
 
-
     private var _binding: FragmentChannelsBinding? = null
     private val binding get() = _binding!!
-    private val listChannelsViewModel: ListChannelsViewModel by viewModels()
+
     private lateinit var adapter: ChannelsAdapter
 
     override fun onCreateView(
