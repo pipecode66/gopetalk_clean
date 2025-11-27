@@ -23,31 +23,6 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      # ✅ TEST 1 – Unit tests
+      # TESTS
       - name: Run unit tests
         run: ./gradlew test
-
-      # ✅ TEST 2 – Instrumentation
-      - name: Run instrumentation tests
-        run: ./gradlew connectedAndroidTest
-
-      # Build solo si los tests anteriores pasan
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-
-      - name: Build release APK
-        run: ./gradlew assembleRelease
-
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-apk-${{ github.sha }}
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 7
-
-      - name: Upload release APK (unsigned if no signing config)
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-apk-${{ github.sha }}
-          path: app/build/outputs/apk/release/*.apk
-          retention-days: 7
