@@ -13,7 +13,7 @@ import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-/* */
+/* DADASDA */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListChannelsViewModelTest {
 
