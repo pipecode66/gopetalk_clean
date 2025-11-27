@@ -2,6 +2,7 @@ package com.example.gopetalk_clean.ui.channels
 
 import com.example.gopetalk_clean.MainDispatcherRule
 import com.example.gopetalk_clean.domain.state.ChannelUiState
+import com.example.gopetalk_clean.domain.usecase.GetChannelUsersUseCase
 import com.example.gopetalk_clean.domain.usecase.GetChannelsUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -9,11 +10,11 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-/* DADASDA */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ListChannelsViewModelTest {
 
@@ -21,11 +22,12 @@ class ListChannelsViewModelTest {
     val dispatcherRule = MainDispatcherRule()
 
     private val getChannelsUseCase: GetChannelsUseCase = mock()
+    private val getChannelUsersUseCase: GetChannelUsersUseCase = mock()
 
     @Test
     fun `loadChannels populates uiState when use case succeeds`() = runTest {
         whenever(getChannelsUseCase.invoke()).thenReturn(listOf("general", "support"))
-        val viewModel = ListChannelsViewModel(getChannelsUseCase)
+        val viewModel = ListChannelsViewModel(getChannelsUseCase, getChannelUsersUseCase)
 
         viewModel.loadChannels()
         advanceUntilIdle()
@@ -39,7 +41,7 @@ class ListChannelsViewModelTest {
     @Test
     fun `loadChannels sets errorMessage when use case throws`() = runTest {
         whenever(getChannelsUseCase.invoke()).doThrow(RuntimeException("network down"))
-        val viewModel = ListChannelsViewModel(getChannelsUseCase)
+        val viewModel = ListChannelsViewModel(getChannelsUseCase, getChannelUsersUseCase)
 
         viewModel.loadChannels()
         advanceUntilIdle()
